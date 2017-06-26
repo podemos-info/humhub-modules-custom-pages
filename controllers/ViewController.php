@@ -34,7 +34,7 @@ class ViewController extends Controller
         if ($page->type == CustomPage::TYPE_HTML) {
             return $this->render('html', array('html' => $page->content));
         } elseif ($page->type == CustomPage::TYPE_IFRAME) {
-            return $this->render('iframe', array('url' => $page->content, 'navigationClass' => $page->navigation_class));
+            return $this->render('iframe', array('url' => $page->content, 'navigationClass' => $page->navigation_class, 'iframe_width' => $page->iframe_width=='' ? "100%" : $page->iframe_width ));
         } elseif ($page->type == CustomPage::TYPE_LINK) {
             return $this->redirect($page->content);
         } elseif ($page->type == CustomPage::TYPE_MARKDOWN) {

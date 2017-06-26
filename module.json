@@ -1,6 +1,6 @@
 {
     "id": "custom_pages",
-    "name": "Custom Pages",
+    "name": "Custom Pages Podemos",
     "description": "Allows admins to add custom pages (html or markdown) or external links to various navigations (e.g. top navigation, account menu).",
     "keywords": ["pages", "custom", "iframe", "markdown", "link", "navigation"],
     "version": "0.2.0",

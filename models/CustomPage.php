@@ -17,6 +17,7 @@ use humhub\components\ActiveRecord;
  * @property integer $sort_order
  * @property integer $admin_only
  * @property string $navigation_class
+ * @property string $link_target
  */
 class CustomPage extends ActiveRecord
 {
@@ -42,9 +43,9 @@ class CustomPage extends ActiveRecord
     {
         return array(
             [['type', 'title', 'navigation_class'], 'required'],
-            [['type', 'sort_order', 'admin_only'], 'integer'],
+            [['type', 'sort_order', 'admin_only', 'application_id', 'show_on_top'], 'integer'],
             [['title', 'navigation_class'], 'string', 'max' => 255],
-            [['icon'], 'string', 'max' => 100],
+            [['icon', 'iframe_width', 'link_target'], 'string', 'max' => 100],
             [['content', 'url'], 'safe'],
         );
     }
@@ -64,6 +65,10 @@ class CustomPage extends ActiveRecord
             'sort_order' => 'Sort Order',
             'admin_only' => 'Only visible for admins',
             'navigation_class' => 'Navigation',
+            'application_id' => 'Application ID',
+            'show_on_top' => 'Show on Top Bar',
+            'iframe_width' => 'Iframe width',
+            'link_target' => 'Link target',
         );
     }
 

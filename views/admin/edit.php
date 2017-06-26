@@ -39,10 +39,17 @@ Assets::register($this);
             <?php echo $form->textField($page, 'url', array('class' => 'form-control', 'placeholder' => Yii::t('CustomPagesModule.views_admin_edit', 'URL'))); ?>
         </div>
 
-
         <div class="form-group">
             <?php echo $form->labelEx($page, 'navigation_class'); ?>
             <?php echo $form->dropdownList($page, 'navigation_class', CustomPage::getNavigationClasses(), array('class' => 'form-control', 'rows' => '5', 'placeholder' => Yii::t('CustomPagesModule.views_admin_edit', 'Content'))); ?>
+        </div>
+
+        <div class="form-group">
+            <div class="checkbox">
+                <label>
+                    <?php echo $form->checkBox($page, 'show_on_top'); ?> <?php echo $page->getAttributeLabel('show_on_top'); ?>
+                </label>
+            </div>
         </div>
 
         <div class="form-group">
@@ -50,6 +57,25 @@ Assets::register($this);
             <?php echo $form->textField($page, 'sort_order', array('class' => 'form-control', 'placeholder' => Yii::t('CustomPagesModule.views_admin_edit', 'Sort Order'))); ?>
             <p class="help-block"><?php echo Yii::t('CustomPagesModule.views_admin_edit', 'Default sort orders scheme: 100, 200, 300, ...'); ?></p>
 
+        </div>
+
+        <div class="form-group">
+            <?php echo $form->labelEx($page, 'application_id'); ?>
+            <?php echo $form->textField($page, 'application_id', array('class' => 'form-control', 'placeholder' => Yii::t('CustomPagesModule.views_admin_edit', 'Application ID'))); ?>
+            <p class="help-block"><?php echo Yii::t('CustomPagesModule.views_admin_edit', 'Directorio application ID (only for podemos)'); ?></p>
+
+        </div>
+
+        <div class="form-group">
+            <?php echo $form->labelEx($page, 'iframe_width'); ?>
+            <?php echo $form->textField($page, 'iframe_width', array('class' => 'form-control', 'placeholder' => Yii::t('CustomPagesModule.views_admin_edit', 'Iframe width'))); ?>
+            <p class="help-block"><?php echo Yii::t('CustomPagesModule.views_admin_edit', 'Iframe width (pixels or percent are allowed)'); ?></p>
+        </div>
+
+        <div class="form-group">
+            <?php echo $form->labelEx($page, 'link_target'); ?>
+            <?php echo $form->textField($page, 'link_target', array('class' => 'form-control', 'placeholder' => Yii::t('CustomPagesModule.views_admin_edit', 'Link target'))); ?>
+            <p class="help-block"><?php echo Yii::t('CustomPagesModule.views_admin_edit', 'Link target ( _top , _self , _blank )'); ?></p>
         </div>
 
         <?php
