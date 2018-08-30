@@ -1,4 +1,7 @@
 <?php
 return array (
-  '<strong>Add</strong> new page' => '<strong>Ajouter</strong> une nouvelle page',
+  'Add new {pageType}' => '',
+  'Create new template' => '',
+  'Edit template' => '',
+  'Settings' => 'Paramètres',
 );

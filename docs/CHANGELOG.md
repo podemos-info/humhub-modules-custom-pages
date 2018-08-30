@@ -1,3 +1,31 @@
+0.8.6  (July 13, 2018)
+---------------------
+- Fix: added missing custom directories
+
+0.8.5  (July 12, 2018)
+---------------------
+- Fix: added check for php page active in php file count check
+- Fix: edit snippet not working in addition with footer nav
+
+0.8.4  (July 2, 2018)
+---------------------
+- Fix: PHP 7.2 compatibility issues
+
+0.8.3
+-----
+- Fix: 1.3 compatibility
+- Fix: 1.2.0 compatibility
+
+0.8.2:
+- Chg: Use of 'Pages' overview as first admin page
+
+0.8:
+- Fix #73: Richtext uploads not attached on initial edit;
+- Fix #33: fixed strict access for global pages
+- Fix #68: wrong translation key
+- Enh: Added page type PHP
+- Enh: Added module setting page
+
 0.7.13:
 - Fix: Error with FileManager afterSave logic
 - Enh: Open FileDownload items in new window
