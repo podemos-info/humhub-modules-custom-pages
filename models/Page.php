@@ -26,6 +26,7 @@ use humhub\modules\custom_pages\modules\template\models\Template;
  * @property string $navigation_class
  * @property string $cssClass
  * @property string $url
+ * @property string $link_target
  */
 class Page extends ActiveRecord implements CustomContentContainer
 {
@@ -68,12 +69,12 @@ class Page extends ActiveRecord implements CustomContentContainer
     {
         $result = $this->defaultAttributeLabels();
         $result['in_new_window'] = Yii::t('CustomPagesModule.models_Page', 'Open in new window');
-
-
-
-
         $result['navigation_class'] = Yii::t('CustomPagesModule.models_Page','Navigation');
         $result['url'] = Yii::t('CustomPagesModule.models_Page','Url shortcut');
+        $result['application_id'] = 'Application ID';
+        $result['show_on_top'] = 'Show on Top Bar';
+        $result['iframe_width'] = 'Iframe width';
+        $result['link_target'] = 'Link target';
         return $result;
     }
 
@@ -84,9 +85,11 @@ class Page extends ActiveRecord implements CustomContentContainer
     {
         $rules = $this->defaultRules();
         $rules[] = ['navigation_class', 'required'];
+        $rules[] = [['type', 'sort_order', 'admin_only', 'application_id', 'show_on_top'], 'integer'];
         $rules[] = [['in_new_window', 'admin_only'], 'integer'];
         $rules[] = [['url'], 'unique', 'skipOnEmpty' => 'true'];
         $rules[] = [['content', 'url'], 'safe'];
+        $rules[] = [['icon', 'iframe_width', 'link_target'], 'string', 'max' => 100];
         return $rules;
     }
 

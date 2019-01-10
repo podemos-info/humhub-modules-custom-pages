@@ -83,6 +83,8 @@ $deleteUrl = Url::to(['delete', 'id' => $page->id, 'sguid' => $sguid]);
 
         <?= $form->field($page, 'sort_order')->textInput(); ?>
 
+        <?= $form->field($page, 'application_id')->textInput(); ?>
+
         <?php if ($page->hasAttribute('cssClass') && !$page->isType(Container::TYPE_LINK)) : ?>
             <?= $form->field($page, 'cssClass'); ?>
         <?php endif; ?>
@@ -93,6 +95,10 @@ $deleteUrl = Url::to(['delete', 'id' => $page->id, 'sguid' => $sguid]);
 
         <?php if ($page->hasAttribute('in_new_window')) : ?> 
             <?= $form->field($page, 'in_new_window')->checkbox() ?>
+        <?php endif; ?>
+
+        <?php if ($page->hasAttribute('show_on_top')) : ?> 
+            <?= $form->field($page, 'show_on_top')->checkbox() ?>
         <?php endif; ?>
 
         <?= Html::submitButton(Yii::t('CustomPagesModule.views_common_edit', 'Save'), ['class' => 'btn btn-primary', 'data-ui-loader' => '']); ?>
