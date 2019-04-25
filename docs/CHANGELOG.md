@@ -1,3 +1,34 @@
+0.8.14  (April 5, 2019)
+---------------------
+- Fix: Missed confirm box on page deletion
+
+
+0.8.13  (February 25, 2019)
+---------------------
+- Fixed xss vulnerability issue
+
+0.8.12  (February 05, 2019)
+---------------------
+- Fix: Space admin can't add template components
+- Chng: Updated min version to 1.3.0
+
+0.8.11  (February 01, 2019)
+---------------------
+- Enh: Updated translations
+- Fix #89: XSS vulnerability
+
+0.8.10  (October 27, 2018)
+---------------------
+- Enh: Translation updates
+
+0.8.9  (October 04, 2018)
+---------------------
+- Fix: Iframe loader not removed
+
+0.8.8  (September 18, 2018)
+---------------------
+- Fix: Use of deprecated jQuery load instead of .on('load')
+
 0.8.6  (July 13, 2018)
 ---------------------
 - Fix: added missing custom directories
