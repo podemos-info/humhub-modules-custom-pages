@@ -1,3 +1,58 @@
+Changelog
+=========
+
+1.0.8 (Unreleased)
+--------------------
+- Fix: Removed redundant twig class loading
+
+1.0.7 (April, 06, 2020)
+--------------------
+- Chg: Added 1.5 defer compatibility
+- Fix: Fixed "unreachable code after return statement" in humhub.custom_pages.template.TemplateElement.js
+- Enh: Improved event handler exception handling
+
+1.0.6 (February 19, 2020)
+---------------------
+- Fix #113: Double collapse menu item in snippet context menu
+- Fix #112: Markdown snippet does not use Richtext output format
+- Enh #44: Improved snippet and page visibility
+
+1.0.5 (December 10, 2019)
+---------------------
+- Fix #105: Global page overview only shows pages created by user (https://github.com/humhub/humhub/issues/3784)
+- Fix #107: Open in new window setting ignored
+
+1.0.4 (November 05, 2019)
+---------------------
+- Fix: Added missing ckeditor plugins
+
+1.0.3 (October 31, 2019)
+---------------------
+- Fix: Use of wrong content visibility in page migration
+- Fix: Guest access for public global pages
+
+1.0.2 
+---------------------
+- Enh: Update Ckeditor to v4.13.0
+
+1.0.1
+---------------------
+- Enh: 1.4 nonce compatibility
+
+1.0.0  (February 25, 2019)
+---------------------
+- Enh: Added integration layer
+- Enh: New template content type HumHub Richtext
+- Enh: Use Markdown Richtext as Markdown editor
+- Chng: Aliged CustomContentContainer tables and controller logic
+- Enh: Added blank system template
+- Chng: Content are public by default if admin_only is not enabled
+- Enh: Added codemirror editor
+- Enh: Order templates by name
+- Fix: onBeforeUnload not working with pjax
+- Fix: default data reset throws error
+- Enh: Added inline_text flag to text content
+
 0.8.14  (April 5, 2019)
 ---------------------
 - Fix: Missed confirm box on page deletion

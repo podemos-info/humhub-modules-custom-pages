@@ -2,16 +2,16 @@
 
 namespace humhub\modules\custom_pages\models;
 
-use humhub\modules\custom_pages\models\forms\SettingsForm;
+use humhub\modules\space\models\Space;
 use Yii;
-use humhub\modules\custom_pages\components\Container;
+use humhub\modules\custom_pages\models\forms\SettingsForm;
 use humhub\modules\custom_pages\modules\template\models\Template;
 
 /**
  * This is the model class for table "custom_pages_container_snipped".
  *
  * ContainerSnippets are snippets which can be added to a space sidebar.
- * 
+ *
  * The followings are the available columns in table 'custom_pages_container_page':
  * @property integer $id
  * @property integer $type
@@ -22,8 +22,10 @@ use humhub\modules\custom_pages\modules\template\models\Template;
  * @property integer $admin_only
  * @property string $cssClass
  */
-class ContainerSnippet extends ContainerPage
+class ContainerSnippet extends Snippet
 {
+
+    const SIDEEBAR_STREAM = 'SpaceStreamSidebar';
 
     /**
      * @return string the associated database table name
@@ -33,50 +35,10 @@ class ContainerSnippet extends ContainerPage
         return 'custom_pages_container_snippet';
     }
 
-    /**
-     * @inheritdoc
-     * @return string
-     */
-    public function rules()
-    {
-        $rules = $this->defaultRules();
-        $rules[] = ['page_content', 'safe'];
-        return $rules;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getPageContentProperty() {
-        return 'page_content';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getContentName()
-    {
-        return 'Snippet';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getUrl()
-    {
-        return $this->content->container->createUrl('/custom_pages/container-snippet/view', ['id' => $this->id]);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getContentTypes()
+    public static function getDefaultTargets()
     {
         return [
-            Container::TYPE_MARKDOWN,
-            Container::TYPE_IFRAME,
-            Container::TYPE_TEMPLATE,
-            Container::TYPE_PHP,
+            ['id' => self::SIDEEBAR_STREAM, 'name' => Yii::t('CustomPagesModule.base', 'Stream'), 'accessRoute' => '/space/space/home']
         ];
     }
 
@@ -101,7 +63,25 @@ class ContainerSnippet extends ContainerPage
      */
     public function getPhpViewPath()
     {
-        $settings = new SettingsForm();
-        return $settings->phpContainerSnippetPath;
+        return (new SettingsForm())->phpContainerSnippetPath;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getVisibilitySelection()
+    {
+        $result = [
+            static::VISIBILITY_ADMIN_ONLY => Yii::t('CustomPagesModule.visibility', 'Admin only'),
+            static::VISIBILITY_PRIVATE => Yii::t('CustomPagesModule.visibility', 'Space Members only'),
+        ];
+
+        $container = $this->content->container;
+        if($container->visibility === Space::VISIBILITY_ALL) {
+            $result[static::VISIBILITY_PUBLIC] = Yii::t('CustomPagesModule.visibility', 'Public');
+        }
+
+        return $result;
     }
 }

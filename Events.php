@@ -1,15 +1,16 @@
 <?php
 namespace humhub\modules\custom_pages;
 
+use humhub\modules\custom_pages\models\TemplateType;
 use Yii;
 use yii\helpers\Html;
-use yii\helpers\Url;
+use humhub\modules\custom_pages\helpers\Url;
 use humhub\modules\custom_pages\models\Page;
-use humhub\modules\custom_pages\components\Container;
 use humhub\modules\custom_pages\models\ContainerPage;
 use humhub\modules\custom_pages\models\ContainerSnippet;
 use humhub\modules\custom_pages\widgets\SnippetWidget;
 use humhub\modules\custom_pages\models\Snippet;
+use humhub\modules\custom_pages\modules\template\models\PagePermission;
 
 /**
  * CustomPagesEvents
@@ -20,137 +21,203 @@ class Events
 {
     public static function onAdminMenuInit($event)
     {
-        $event->sender->addItem([
-            'label' => Yii::t('CustomPagesModule.base', 'Custom Pages'),
-            'url' => Url::to(['/custom_pages/admin']),
-            'group' => 'manage',
-            'icon' => '<i class="fa fa-file-text-o"></i>',
-            'isActive' => (Yii::$app->controller->module && Yii::$app->controller->module->id == 'custom_pages' && Yii::$app->controller->id == 'admin'),
-            'sortOrder' => 300,
-        ]);
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
+
+            if (!Yii::$app->user->isAdmin()) {
+                return;
+            }
+
+            $event->sender->addItem([
+                'label' => Yii::t('CustomPagesModule.base', 'Custom Pages'),
+                'url' => Url::toPageOverview(),
+                'group' => 'manage',
+                'icon' => '<i class="fa fa-file-text-o"></i>',
+                'isActive' => (Yii::$app->controller->module
+                    && Yii::$app->controller->module->id === 'custom_pages'
+                    && (Yii::$app->controller->id === 'page' || Yii::$app->controller->id === 'config')),
+                'sortOrder' => 300,
+            ]);
+        } catch (\Throwable $e) {
+            Yii::error($e);
+        }
     }
 
     public static function onSpaceMenuInit($event)
     {
-        $space = $event->sender->space;
-        if ($space->isModuleEnabled('custom_pages')) {
-            $pages = ContainerPage::find()->contentContainer($space)->all();
-            foreach ($pages as $page) {
-                if($page->admin_only && !modules\template\models\TemplatePagePermission::canEdit()) {
-                    continue;
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
+
+            /* @var $space \humhub\modules\space\models\Space */
+            $space = $event->sender->space;
+            if ($space->isModuleEnabled('custom_pages')) {
+                $pages = ContainerPage::find()->contentContainer($space)->andWhere(['target' => ContainerPage::NAV_CLASS_SPACE_NAV])->all();
+                foreach ($pages as $page) {
+                    if (!$page->canView()) {
+                        continue;
+                    }
+
+                    $event->sender->addItem([
+                        'label' => Html::encode($page->title),
+                        'group' => 'modules',
+                        'htmlOptions' => [
+                            'target' => ($page->in_new_window) ? '_blank' : '',
+                            'data-pjax-prevent' => 1
+                        ],
+                        'url' => $page->getUrl(),
+                        'icon' => '<i class="fa ' . Html::encode($page->icon) . '"></i>',
+                        'isActive' => (Yii::$app->controller->module
+                            && Yii::$app->controller->module->id === 'custom_pages'
+                            && Yii::$app->controller->id === 'container'
+                            && Yii::$app->controller->action->id === 'view' && Yii::$app->request->get('id') == $page->id),
+                        'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
+                    ]);
                 }
-            
-                $event->sender->addItem([
-                    'label' => \yii\helpers\Html::encode($page->title),
-                    'group' => 'modules',
-                    'target' => ($page->in_new_window) ? '_blank' : null,
-                    'url' => $space->createUrl('/custom_pages/container/view', ['id' => $page->id]),
-                    'icon' => '<i class="fa ' . \yii\helpers\Html::encode($page->icon) . '"></i>',
-                    'isActive' => (Yii::$app->controller->module && Yii::$app->controller->module->id == 'custom_pages' && Yii::$app->controller->id == 'container' && Yii::$app->controller->action->id == 'view' && Yii::$app->request->get('id') == $page->id),
-                    'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
-                ]);
             }
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
     }
 
     public static function onSpaceHeaderMenuInit($event)
     {
-        if (Yii::$app->controller->module && Yii::$app->controller->module->id == 'custom_pages' 
-                && Yii::$app->controller->id == 'container' && Yii::$app->controller->action->id == 'view' && modules\template\models\TemplatePagePermission::canEdit()) {
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
 
-            $page = ContainerPage::find()->contentContainer(Yii::$app->controller->contentContainer)->where(['custom_pages_container_page.id' => Yii::$app->request->get('id')])->one();
+            if (Yii::$app->controller->module
+                && Yii::$app->controller->module->id === 'custom_pages'
+                && Yii::$app->controller->id === 'container'
+                && Yii::$app->controller->action->id === 'view'
+                && PagePermission::canEdit()) {
 
-            if ($page->type == Container::TYPE_TEMPLATE) {
-                $event->sender->addWidget(modules\template\widgets\TemplatePageEditButton::class, [], ['sortOrder' => 500]);
-            } else {
-                $event->sender->addWidget(modules\template\widgets\PageConfigurationButton::class, [], ['sortOrder' => 500]);
+                $page = ContainerPage::find()->contentContainer(Yii::$app->controller->contentContainer)->where(['custom_pages_container_page.id' => Yii::$app->request->get('id')])->one();
+
+                if (TemplateType::isType($page->type)) {
+                    $event->sender->addWidget(modules\template\widgets\TemplatePageEditButton::class, [], ['sortOrder' => 500]);
+                } else {
+                    $event->sender->addWidget(modules\template\widgets\PageConfigurationButton::class, [], ['sortOrder' => 500]);
+                }
             }
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
     }
 
     public static function onSpaceAdminMenuInit($event)
     {
-        $space = $event->sender->space;
-        if ($space->isModuleEnabled('custom_pages') && $space->isAdmin() && $space->isMember()) {
-            $event->sender->addItem(array(
-                'label' => Yii::t('CustomPagesModule.base', 'Custom Pages'),
-                'group' => 'admin',
-                'url' => $space->createUrl('/custom_pages/container/list'),
-                'icon' => '<i class="fa fa-file-text-o"></i>',
-                'isActive' => (Yii::$app->controller->module && Yii::$app->controller->module->id == 'custom_pages' && Yii::$app->controller->id == 'container' && Yii::$app->controller->action->id != 'view'),
-            ));
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
+
+            /* @var $space \humhub\modules\space\models\Space */
+            $space = $event->sender->space;
+            if ($space->isModuleEnabled('custom_pages') && $space->isAdmin() && $space->isMember()) {
+                $event->sender->addItem([
+                    'label' => Yii::t('CustomPagesModule.base', 'Custom Pages'),
+                    'group' => 'admin',
+                    'url' => Url::toPageOverview($space),
+                    'icon' => '<i class="fa fa-file-text-o"></i>',
+                    'isActive' => (Yii::$app->controller->module
+                        && Yii::$app->controller->module->id === 'custom_pages'
+                        && Yii::$app->controller->id === 'container'
+                        && Yii::$app->controller->action->id !== 'view'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
     }
 
     public static function onDirectoryMenuInit($event)
     {
-        foreach (Page::findAll(['navigation_class' => Page::NAV_CLASS_DIRECTORY]) as $page) {
-            // Admin only
-            if ($page->admin_only == 1 && !Yii::$app->user->isAdmin()) {
-                continue;
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
+
+            foreach (Page::findAll(['target' => Page::NAV_CLASS_DIRECTORY]) as $page) {
+                // Admin only
+                if ($page->admin_only == 1 && !Yii::$app->user->isAdmin()) {
+                    continue;
+                }
+
+                $event->sender->addItem([
+                    'label' => Html::encode($page->title),
+                    'url' => Url::to(['/custom_pages/view', 'id' => $page->id]),
+                    'group' => 'directory',
+                    'htmlOptions' => ['target' => ($page->in_new_window) ? '_blank' : ''],
+                    'icon' => '<i class="fa ' . Html::encode($page->icon) . '"></i>',
+                    'isActive' => (Yii::$app->controller->module
+                        && Yii::$app->controller->module->id === 'custom_pages'
+                        && Yii::$app->controller->id === 'view' && Yii::$app->request->get('id') == $page->id),
+                    'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
+                ]);
             }
-            
-            $event->sender->addItem(array(
-                'label' => Html::encode($page->title),
-                'url' => Url::to(['/custom_pages/view', 'id' => $page->id]),
-                'group' => 'directory',
-                'target' => ($page->in_new_window) ? '_blank' : null,
-                'icon' => '<i class="fa ' . Html::encode($page->icon) . '"></i>',
-                'isActive' => (Yii::$app->controller->module && Yii::$app->controller->module->id == 'custom_pages' && Yii::$app->controller->id == 'view' && Yii::$app->request->get('id') == $page->id),
-                'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
-            ));
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
-    }    
+    }
 
     public static function onTopMenuInit($event)
     {
 	$applications = Events::getApplications(Yii::$app->user->getIdentity()->username);
-        foreach (Page::findAll(['navigation_class' => Page::NAV_CLASS_TOPNAV]) as $page) {
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
 
-            // Admin only
-            if ($page->admin_only == 1 && !Yii::$app->user->isAdmin()) {
-                continue;
-            }
+            foreach (Page::findAll(['target' => Page::NAV_CLASS_TOPNAV]) as $page) {
+
+                if (!$page->canView()) {
+                    continue;
+                }
 
             if ($page->application_id && !in_array($page->application_id, $applications)) {
                 continue;
             }
 
-            $event->sender->addItem(array(
-                'label' => Html::encode($page->title),
-                'url' => Url::to(['/custom_pages/view', 'id' => $page->id]),
-                'target' => ($page->in_new_window) ? '_blank' : null,
-                'icon' => '<i class="fa ' .Html::encode($page->icon) . '"></i>',
-                'isActive' => (Yii::$app->controller->module && Yii::$app->controller->module->id == 'custom_pages' && Yii::$app->controller->id == 'view' && Yii::$app->request->get('id') == $page->id),
-                'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
-                'show_on_top' => $page->show_on_top,
-            ));
+                $event->sender->addItem([
+                    'label' => Html::encode($page->title),
+                    'url' => Url::to(['/custom_pages/view', 'id' => $page->id]),
+                    'htmlOptions' => ['target' => ($page->in_new_window) ? '_blank' : ''],
+                    'icon' => '<i class="fa ' . Html::encode($page->icon) . '"></i>',
+                    'isActive' => (Yii::$app->controller->module
+                        && Yii::$app->controller->module->id === 'custom_pages'
+                        && Yii::$app->controller->id === 'view' && Yii::$app->request->get('id') == $page->id),
+                    'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
+                    'show_on_top' => $page->show_on_top,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
     }
 
     public static function onAccountMenuInit($event)
     {
-	$applications = Events::getApplications(Yii::$app->user->getIdentity()->username);
-        $current_id = (Yii::$app->controller->module && Yii::$app->controller->module->id == 'custom_pages' && Yii::$app->controller->id == 'view') ? Yii::$app->request->get('id') : NULL;
-        foreach (Page::findAll(['navigation_class' => Page::NAV_CLASS_ACCOUNTNAV]) as $page) {
-            // Admin only
-            if ($page->admin_only == 1 && !Yii::$app->user->isAdmin()) {
-                continue;
-            }
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
+            $applications = Events::getApplications(Yii::$app->user->getIdentity()->username);
 
-            if ($page->application_id && !in_array($page->application_id, $applications)) {
-                continue;
-            }
+            foreach (Page::findAll(['target' => Page::NAV_CLASS_ACCOUNTNAV]) as $page) {
+                if (!$page->canView()) {
+                    continue;
+                }
 
-            $event->sender->addItem(array(
-                'label' => Html::encode($page->title),
-                'url' => Url::to(['/custom_pages/view', 'id' => $page->id]),
-                'target' => ($page->in_new_window) ? '_blank' : '',
-                'icon' => '<i class="fa ' . Html::encode($page->icon) . '"></i>',
-                'isActive' => (Yii::$app->controller->module && Yii::$app->controller->module->id == 'custom_pages' && Yii::$app->controller->id == 'view' && Yii::$app->request->get('id') == $page->id),
-                'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
-                'show_on_top' => $page->show_on_top,
-            ));
+                if ($page->application_id && !in_array($page->application_id, $applications)) {
+                    continue;
+                }
+
+
+                $event->sender->addItem([
+                    'label' => Html::encode($page->title),
+                    'url' => Url::to(['/custom_pages/view', 'id' => $page->id]),
+                    'htmlOptions' => ['target' => ($page->in_new_window) ? '_blank' : ''],
+                    'icon' => '<i class="fa ' . Html::encode($page->icon) . '"></i>',
+                    'isActive' => (Yii::$app->controller->module
+                        && Yii::$app->controller->module->id === 'custom_pages'
+                        && Yii::$app->controller->id === 'view' && Yii::$app->request->get('id') == $page->id),
+                    'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
+                    'show_on_top' => $page->show_on_top,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
     }
 
@@ -169,52 +236,59 @@ class Events
     }
     public static function onDashboardSidebarInit($event)
     {
-        if (Yii::$app->user->isGuest) {
-            return;
-        }
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
 
-        $snippets = Snippet::findAll(['sidebar' => Snippet::SIDEBAR_DASHBOARD]);
-        $canEdit = modules\template\models\TemplatePagePermission::canEdit();
-        foreach ($snippets as $snippet) {
-            if($snippet->admin_only && !$canEdit) {
-                continue;
+            $snippets = Snippet::findAll(['target' => Snippet::SIDEBAR_DASHBOARD]);
+            $canEdit = PagePermission::canEdit();
+            foreach ($snippets as $snippet) {
+                if (!$snippet->canView()) {
+                    continue;
+                }
+                $event->sender->addWidget(SnippetWidget::class, ['model' => $snippet, 'canEdit' => $canEdit], ['sortOrder' => $snippet->sort_order]);
             }
-            $event->sender->addWidget(SnippetWidget::class, ['model' => $snippet, 'canEdit' => $canEdit], ['sortOrder' => $snippet->sort_order]);
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
     }
-    
+
     public static function onDirectorySidebarInit($event)
     {
-        if (Yii::$app->user->isGuest) {
-            return;
-        }
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
 
-        $snippets = Snippet::findAll(['sidebar' => Snippet::SIDEBAR_DIRECTORY]);
-        $canEdit = modules\template\models\TemplatePagePermission::canEdit();
-        foreach ($snippets as $snippet) {
-            if($snippet->admin_only && !$canEdit) {
-                continue;
+            $snippets = Snippet::findAll(['target' => Snippet::SIDEBAR_DIRECTORY]);
+            $canEdit = PagePermission::canEdit();
+            foreach ($snippets as $snippet) {
+                if (!$snippet->canView()) {
+                    continue;
+                }
+                $event->sender->addWidget(SnippetWidget::class, ['model' => $snippet, 'canEdit' => $canEdit], ['sortOrder' => $snippet->sort_order]);
             }
-            $event->sender->addWidget(SnippetWidget::class, ['model' => $snippet, 'canEdit' => $canEdit], ['sortOrder' => $snippet->sort_order]);
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
     }
 
     public static function onSpaceSidebarInit($event)
     {
-        if (Yii::$app->user->isGuest) {
-            return;
-        }
+        try {
+            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
 
-        $space = $event->sender->space;
-        $canEdit = modules\template\models\TemplatePagePermission::canEdit();
-        if ($space->isModuleEnabled('custom_pages')) {
-            $snippets = ContainerSnippet::find()->contentContainer($space)->all();
-            foreach ($snippets as $snippet) {
-                if($snippet->admin_only && !$canEdit) {
-                    continue;
+            $space = $event->sender->space;
+            $canEdit = PagePermission::canEdit();
+            if ($space->isModuleEnabled('custom_pages')) {
+                $snippets = ContainerSnippet::find()->contentContainer($space)->all();
+                foreach ($snippets as $snippet) {
+                    if (!$snippet->canView()) {
+                        continue;
+                    }
+
+                    $event->sender->addWidget(SnippetWidget::class, ['model' => $snippet, 'canEdit' => $canEdit], ['sortOrder' => $snippet->sort_order]);
                 }
-                $event->sender->addWidget(SnippetWidget::class, ['model' => $snippet, 'canEdit' => $canEdit], ['sortOrder' => $snippet->sort_order]);
             }
+        } catch (\Throwable $e) {
+            Yii::error($e);
         }
     }
 

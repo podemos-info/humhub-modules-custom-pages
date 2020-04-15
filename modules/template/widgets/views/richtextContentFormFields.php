@@ -3,7 +3,7 @@
 /* @var $form humhub\compat\CActiveForm */
 
 use yii\helpers\Url;
-use yii\helpers\Html;
+use humhub\libs\Html;
 
 $id = 'ckeditor_' . $model->id;
 $id .= ($model->id == null) ? preg_replace( "/(\[|\])/","", $model->formName() )   : $model->id;
@@ -24,7 +24,7 @@ $uploadUrl = Url::to(['/custom_pages/template/upload/upload-ckeditor-file', 'sgu
     <?= Html::hiddenInput($model->formName().'[fileList][]', $file); ?>
 <?php endforeach; ?>
 
-<script>
+<?= Html::beginTag('script') ?>
     var ckeditorAddUploadedFile = function (guid) {
         var form = $(CKEDITOR.currentInstance.container.$).closest('form');
         var modelFormName = $(CKEDITOR.currentInstance.element.$).data('form-name');
@@ -51,18 +51,20 @@ $uploadUrl = Url::to(['/custom_pages/template/upload/upload-ckeditor-file', 'sgu
         var initFullEditor = function (id) {
             $('#' + id).data('preset', 'full');
             return initCkEditor(id, [
-                {name: 'document', groups: ['mode', 'document', 'doctools']},
-                {name: 'basicstyles', groups: ['basicstyles', 'cleanup']},
-                {name: 'links'},
-                {name: 'insert'},
-                {name: 'paragraph', groups: ['list', 'indent', 'blocks', 'align', 'bidi']},
-                {name: 'styles'},
-                {name: 'colors'},
-                {name: 'clipboard', groups: ['clipboard', 'undo']},
-                {name: 'editing', groups: ['find', 'selection', 'spellchecker']},
-                {name: 'forms'},
-                {name: 'tools'},
-                {name: 'others'},
+                { name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
+                { name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
+                { name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
+                { name: 'forms', groups: [ 'forms' ] },
+                '/',
+                { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+                { name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
+                { name: 'links', groups: [ 'links' ] },
+                { name: 'insert', groups: [ 'insert' ] },
+                '/',
+                { name: 'styles', groups: [ 'styles' ] },
+                { name: 'colors', groups: [ 'colors' ] },
+                { name: 'tools', groups: [ 'tools' ] },
+                { name: 'others', groups: [ 'others' ] },
                 {name: 'showmore'}
             ], '<?= Yii::t('CustomPagesModule.widgets_views_richtextContentEditForm', 'less'); ?>');
         };
@@ -73,6 +75,7 @@ $uploadUrl = Url::to(['/custom_pages/template/upload/upload-ckeditor-file', 'sgu
                 'skin': 'bootstrapck',
                 'removeButtons': 'Flash',
                 'filebrowserUploadUrl': '<?= $uploadUrl ?>',
+                'filebrowserUploadMethod': 'form',
                  toolbarGroups: toolbars
             });
 
@@ -121,4 +124,4 @@ $uploadUrl = Url::to(['/custom_pages/template/upload/upload-ckeditor-file', 'sgu
 
         initBasicEditor(id);
     })();
-</script>
+<?= Html::endTag('script') ?>

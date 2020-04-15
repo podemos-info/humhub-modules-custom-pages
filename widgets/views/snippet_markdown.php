@@ -1,18 +1,17 @@
 <?php
-use yii\helpers\Url;
 
-if ($contentContainer != null) {
-    $editUrl = $contentContainer->createUrl('/custom_pages/container-snippet/edit', ['id' => $model->id]);
-} else {
-    $editUrl = Url::to(['/custom_pages/snippet/edit', 'id' => $model->id]);
-}
+use humhub\modules\content\widgets\richtext\RichText;
+use humhub\modules\custom_pages\widgets\SnippetContent;
+
+/* @var $model \humhub\modules\custom_pages\models\CustomContentContainer */
+/* @var $canEdit bool */
 
 $navigation = (!$canEdit) ? [] : [
-    '<a href="'.$editUrl.'" class="panel-collapse"><i class="fa fa-pencil"></i>' . Yii::t('CustomPagesModule.base', 'Edit') . '</a>'
+    '<a href="'.$model->getEditUrl().'"><i class="fa fa-pencil"></i>' . Yii::t('CustomPagesModule.base', 'Edit') . '</a>'
 ];
 ?>
-<?= \humhub\modules\custom_pages\widgets\SnippetContent::widget([
+<?= SnippetContent::widget([
     'model' => $model,
-    'content' => humhub\widgets\MarkdownView::widget(['markdown' => $model->getPageContent()]),
+    'content' => RichText::output( $model->getPageContent()),
     'navigation' => $navigation
 ]); ?>
