@@ -1,15 +1,53 @@
 Changelog
 =========
 
-1.0.8 (Unreleased)
+
+1.1.1 (November 12, 2020)
+-------------------------
+- Fix #151: Avoid error on creating of custom php page with not existing directory from old settings
+
+
+1.1.0 (November 3, 2020)
+------------------------
+The default folders for PHP custom pages were changed.
+New defaults: php-pages/container_pages/, php-pages/container_snippets/, php-pages/global_pages/, php-pages/global_snippets/ 
+
+- Fix #121: Link color in markdown pages have same color as text
+- Fix #143: (Global) PHP pages were lost on module updates
+- Chg: Changed HumHub min version to 1.7
+- Chg: 1.7 wall stream entry migration
+- Fix: Word break and image overflow issue on template page
+
+
+1.0.10 (September 19, 2020)
+--------------------
+- Fix #142: Codemirror editor does not initialize correctly when accessing by pjax
+- Fix Delete by target error https://github.com/humhub-contrib/blog/issues/3
+
+
+1.0.9 (July 21, 2020)
+--------------------
+- Fix #139: Missing `parent::init()` in admin controller throws error in HumHub 1.6.beta1
+- Fix #138: Admin only restriction does not include space admin
+- Fix #129: Snippet visibility selection to "Public" broken
+- Fix #130: Menu item of space page not activated
+- Fix #124: one- and two column layout broken on space page
+- Fix: Snippet notification content description missing
+- Fix #118: Added missing required view file validation
+- Fix #120: Invalid edit template link for global snippets
+
+1.0.8 (May 29, 2020)
 --------------------
 - Fix: Removed redundant twig class loading
+- Fix: Custom Page visibility selection to "Public" broken
 
-1.0.7 (April, 06, 2020)
+
+1.0.7 (April 06, 2020)
 --------------------
 - Chg: Added 1.5 defer compatibility
 - Fix: Fixed "unreachable code after return statement" in humhub.custom_pages.template.TemplateElement.js
 - Enh: Improved event handler exception handling
+
 
 1.0.6 (February 19, 2020)
 ---------------------

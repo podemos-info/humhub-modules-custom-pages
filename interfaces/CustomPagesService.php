@@ -113,19 +113,19 @@ class CustomPagesService extends Component
      */
     public function deleteAllByTarget($targetId)
     {
-        foreach (Page::find()->where(['target' => $targetId]) as $content) {
+        foreach (Page::find()->where(['target' => $targetId])->all() as $content) {
             $content->delete();
         }
 
-        foreach (ContainerPage::find()->where(['target' => $targetId]) as $content) {
+        foreach (ContainerPage::find()->where(['target' => $targetId])->all() as $content) {
             $content->delete();
         }
 
-        foreach (Snippet::find()->where(['target' => $targetId]) as $content) {
+        foreach (Snippet::find()->where(['target' => $targetId])->all() as $content) {
             $content->delete();
         }
 
-        foreach (ContainerSnippet::find()->where(['target' => $targetId]) as $content) {
+        foreach (ContainerSnippet::find()->where(['target' => $targetId])->all() as $content) {
             $content->delete();
         }
     }
@@ -160,9 +160,7 @@ class CustomPagesService extends Component
             $query->readable();
         }
 
-        /* @var $instance CustomContentContainer */
-        $instance = call_user_func($contentClass.'::instance');
-        if(!$instance->canSeeAdminOnlyContent()) {
+        if(!CustomContentContainer::canSeeAdminOnlyContent($container)) {
             $query->andWhere(['admin_only' => 0]);
         }
 

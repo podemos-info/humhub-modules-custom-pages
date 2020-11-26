@@ -68,34 +68,10 @@ class Events
                         'icon' => '<i class="fa ' . Html::encode($page->icon) . '"></i>',
                         'isActive' => (Yii::$app->controller->module
                             && Yii::$app->controller->module->id === 'custom_pages'
-                            && Yii::$app->controller->id === 'container'
-                            && Yii::$app->controller->action->id === 'view' && Yii::$app->request->get('id') == $page->id),
+                            && Yii::$app->controller->id === 'view'
+                            && Yii::$app->controller->action->id === 'index' && Yii::$app->request->get('id') == $page->id),
                         'sortOrder' => ($page->sort_order != '') ? $page->sort_order : 1000,
                     ]);
-                }
-            }
-        } catch (\Throwable $e) {
-            Yii::error($e);
-        }
-    }
-
-    public static function onSpaceHeaderMenuInit($event)
-    {
-        try {
-            Yii::$app->moduleManager->getModule('custom_pages')->checkOldGlobalContent();
-
-            if (Yii::$app->controller->module
-                && Yii::$app->controller->module->id === 'custom_pages'
-                && Yii::$app->controller->id === 'container'
-                && Yii::$app->controller->action->id === 'view'
-                && PagePermission::canEdit()) {
-
-                $page = ContainerPage::find()->contentContainer(Yii::$app->controller->contentContainer)->where(['custom_pages_container_page.id' => Yii::$app->request->get('id')])->one();
-
-                if (TemplateType::isType($page->type)) {
-                    $event->sender->addWidget(modules\template\widgets\TemplatePageEditButton::class, [], ['sortOrder' => 500]);
-                } else {
-                    $event->sender->addWidget(modules\template\widgets\PageConfigurationButton::class, [], ['sortOrder' => 500]);
                 }
             }
         } catch (\Throwable $e) {
