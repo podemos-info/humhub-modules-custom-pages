@@ -47,6 +47,7 @@ $contentType = $page->getContentType();
             <?= $form->field($page, 'title') ?>
         <?php endif; ?>
 
+        <!--
         <div class="form-group">
             <?= Html::textInput('type', $contentType->getLabel(), ['class' => 'form-control', 'disabled' => '1']); ?>
         </div>
@@ -54,17 +55,12 @@ $contentType = $page->getContentType();
         <div class="form-group">
             <?= Html::textInput('target', $target->name, ['class' => 'form-control', 'disabled' => '1']); ?>
         </div>
-
-        <?php if ($page->isAllowedField('abstract') && (($page instanceof ContainerPage) || version_compare(Yii::$app->version, '1.3.11', '>='))) : ?>
-            <?= $form->field($page, 'abstract')->widget(RichTextField::class); ?>
-            <div class="help-block">
-                <?= Yii::t('CustomPagesModule.views_common_edit',
-                    'The abstract will be used as stream entry content to promote the actual page. 
-                        If no abstract is given or the page is only visible for admins, no stream entry will be created.') ?>
-            </div>
-        <?php endif; ?>
+        -->
 
         <?= $page->getContentType()->renderFormField($form, $page); ?>
+
+
+        <?= $form->beginCollapsibleFields(Yii::t('CustomPagesModule.base', 'Menu settings')); ?>
 
         <?php if ($page instanceof Page && $page->hasAttribute('url') && $page->isAllowedField('url')) : ?>
             <?= $form->field($page, 'url') ?>
@@ -87,17 +83,31 @@ $contentType = $page->getContentType();
             <?= $form->field($page, 'cssClass'); ?>
         <?php endif; ?>
 
-
-        <?= $form->field($page, 'visibility')->radioList($page->getVisibilitySelection()) ?>
-
         <?php if ($page->isAllowedField('in_new_window')) : ?>
             <?php if ($page->hasAttribute('in_new_window')) : ?>
                 <?= $form->field($page, 'in_new_window')->checkbox() ?>
             <?php endif; ?>
         <?php endif; ?>
 
-        <?php if ($page->hasAttribute('show_on_top')) : ?> 
-            <?= $form->field($page, 'show_on_top')->checkbox() ?>
+        <?= $form->endCollapsibleFields(); ?>
+
+        <div class="alert alert-info infoAdminOnly"
+             <?php if ($page->visibility != Page::VISIBILITY_ADMIN_ONLY): ?>style="display:none"<?php endif; ?>>
+            <?= Yii::t('CustomPagesModule.views_common_edit', '<strong>Info: </strong> Pages marked as "Admin Only" are not shown in the stream!'); ?>
+        </div>
+
+        <?php if ($page->isAllowedField('abstract') && (($page instanceof ContainerPage) || version_compare(Yii::$app->version, '1.3.11', '>='))) : ?>
+            <?= $form->beginCollapsibleFields(Yii::t('CustomPagesModule.base', 'Stream options')); ?>
+            <?= $form->field($page, 'abstract')->widget(RichTextField::class); ?>
+            <div class="help-block">
+                <?= Yii::t('CustomPagesModule.views_common_edit',
+                    'The abstract will be used as stream entry content to promote the actual page. 
+                        If no abstract is given or the page is only visible for admins, no stream entry will be created.') ?>
+            </div>
+            <?= $form->endCollapsibleFields(); ?>
+
+            <?= $form->field($page, 'visibility')->radioList($page->getVisibilitySelection()) ?>
+
         <?php endif; ?>
 
         <?= Button::save()->submit() ?>
@@ -110,25 +120,35 @@ $contentType = $page->getContentType();
             <?= Button::success(Yii::t('CustomPagesModule.views_common_edit', 'Inline Editor'))->link(Url::toInlineEdit($page, $target->container))->right()->icon('fa-pencil') ?>
         <?php endif; ?>
 
-<?= Html::script(<<<JS
+        <script <?= Html::nonce(); ?>>
+            var htmlContentCodeMirror; // Used in /resources/js/humhub.custom_pages.html.js
+            $(document).one("humhub:ready", function () {
 
-    $(document).one("humhub:ready", function () {
-          
-        if (!$("#html_content").length) {
-            return;
-        }
-        
-        setTimeout(function () {
-            CodeMirror.fromTextArea($("#html_content")[0], {
-                mode: "text/html",
-                lineNumbers: true,
-                extraKeys: {"Ctrl-Space": "autocomplete"}
-            })
-        }, 60);
-        }
-    );
-JS
-); ?>
+                    if (!$("#html_content").length) {
+                        return;
+                    }
+
+                    setTimeout(function () {
+                        htmlContentCodeMirror = CodeMirror.fromTextArea($("#html_content")[0], {
+                            mode: "text/html",
+                            lineNumbers: true,
+                            extraKeys: {"Ctrl-Space": "autocomplete"}
+                        })
+                    }, 60);
+                }
+            );
+
+            $(document).one("humhub:ready", function () {
+                    $('input[type="radio"][name="ContainerPage[visibility]"]').click(function () {
+                        if ($(this).attr("value") == <?= Page::VISIBILITY_ADMIN_ONLY ?>) {
+                            $(".infoAdminOnly").show();
+                        } else {
+                            $(".infoAdminOnly").hide();
+                        }
+                    });
+                }
+            );
+        </script>
         <?php ActiveForm::end(); ?>
     </div>
 </div>
